@@ -60,5 +60,13 @@ exports.isUrlArchived = function(site) {
   });
 };
 
-exports.downloadUrls = function() {
+exports.downloadUrls = function(site) {
+  $.ajax({
+    url: site,
+    method: 'GET',
+    dataType: 'text',
+    // data: {},
+    success: function () {},
+  });
+
 };
