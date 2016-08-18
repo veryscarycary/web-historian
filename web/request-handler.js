@@ -1,8 +1,22 @@
 var path = require('path');
 var archive = require('../helpers/archive-helpers');
+var httpHelpers = require('./http-helpers');
 var urlParser = require('url');
 var fs = require('fs');
 // require more modules/folders here!
+
+// build this out for the worker
+// var siteRequest = $.ajax({
+//   url: 'www.google.com',
+//   type: 'GET',
+//   contentType: 'text/html',
+//   success: function(data){
+    
+//   },
+//   error: function(err){
+
+//   }
+// });
 
 var headers = {
   'access-control-allow-origin': '*',
@@ -14,19 +28,34 @@ var headers = {
 exports.handleRequest = function (req, res) {
   // handlers
   var endpoint = urlParser.parse(req.url).pathname;
-  console.log('req.method: ', req.method);
-
   // console.log('POSTDATAAA', req._postData);
   // console.log('ENDPOINT', endpoint);
   // if url and GET
-  if (endpoint === '/' && req.method === 'GET') {
 
-    fs.readFile('./web/public/index.html', function(err, data) {
-      headers['Content-Type'] = 'text/html';
-      res.writeHead(200, headers);
-      var x = ' ' + data;
-      res.end(x);
-    });
+  
+
+
+  if (endpoint === '/' && req.method === 'GET') {
+    httpHelpers.serveSiteAssets(res, '/index.html');
+
+  } else if ( endpoint === '/www.google.com') {
+    if (req.method === 'GET') {
+      httpHelpers.serveArchivedAssets(res, '/www.google.com');
+    } else if (req.method === 'POST') {
+      // fs.readFile() plus new site text
+      fs.readFile(archive.paths.list, function(err, data) {
+        var stringifiedData = data.toString();
+        var newData = stringifiedData + '8' + endpoint + '8';
+        console.log('NEWDATA', newData);
+      //   var newData = sites.Container.push(endpoint.slice(1));
+        if (!archive.isUrlInList(stringifiedData, endpoint)) {
+          fs.writeFile(archive.paths.list, newData, function(err) {
+            if (err) { throw err; }
+            console.log('Saved new list!');
+          });
+        }
+      });  
+    }
 
   } else if (endpoint === '/api/sites' && req.method === 'GET') {
 
