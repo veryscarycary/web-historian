@@ -1,6 +1,9 @@
 var fs = require('fs');
 var path = require('path');
+var $ = require('jquery');
 var _ = require('underscore');
+var http = require('http');
+var request = require('request');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -30,7 +33,6 @@ exports.initialize = function(pathsObj) {
 // worker uses this function
 exports.readListOfUrls = function(cb) {
   fs.readFile(exports.paths.list, 'utf8', function(err, data) {
-    console.log('readFile has succeeded with this data: ', data);
 
     var urls = data.split('\n');
     return cb(urls) || urls;
@@ -39,8 +41,8 @@ exports.readListOfUrls = function(cb) {
 
 // webserver uses this function
 exports.isUrlInList = function(url, cb) {
-  exports.readListOfUrls(function(data) {
-    cb(_.contains(data, url));
+  return exports.readListOfUrls(function(data) {
+    return cb(_.contains(data, url));
   });
 };
 
@@ -49,14 +51,13 @@ exports.addUrlToList = function(url, cb) {
   exports.readListOfUrls(function(contents) {
     fs.writeFile(exports.paths.list, contents + '\n' + url, function(err) {
       if (err) { throw err; }
-      cb();
+      if (cb) { cb(); }
     });
   });
 };
 
 exports.isUrlArchived = function(url, cb) {
   fs.readdir(exports.paths.archivedSites, function (err, contents) {
-    console.log('contents: ', contents);
     cb(_.reduce(contents, function(acc, curr) {
       if (curr === url) {
         return true;
@@ -66,13 +67,57 @@ exports.isUrlArchived = function(url, cb) {
   });
 };
 
-exports.downloadUrls = function(site) {
-  $.ajax({
-    url: site,
-    method: 'GET',
-    dataType: 'text',
-    // data: {},
-    success: function () {},
+exports.downloadUrls = function(urlsArray, cb) {
+  // for each
+  urlsArray.forEach(function(url) {
+    exports.isUrlArchived(url, function(bool) {
+      if (!bool) {
+        console.log('isUrlArchived truthiness FALSE: ', bool);
+        console.log('THE URL', url);
+
+        // http.get('http://www.google.com/index.html', function (res) {
+        //   console.log( 'GOT RESPONSE', res);
+        //   // consume response body
+        //   // res.resume();
+        // });
+        // debugger;
+        http.get(url, function (response) {
+          var data = '';
+          response.on('data', function(chunk) { data += chunk; });
+          console.log(data);
+          return data;
+        });
+        //   .on('error', function (e) { console.log('ERRRRRRRRRRRRRRRRR', e); });
+
+        // request(url, function (error, response, body) {
+        //   // if (!error && response.statusCode === 200) {
+        //     console.log(response); // Show the HTML for the Google homepage.
+        //   // }
+        // });
+      }
+
+// fs.writeFileSync(exports.paths.archivedSites + url,
+        // $.ajax({
+        //   url: url,
+        //   method: 'GET',
+        //   dataType: 'text/html',
+        //   success: function (data) {
+        //     console.log('DAAAATTTTTAAAA', data);
+        //     fs.writeFileSync(archive.paths.archivedSites + url, data);
+        //   },
+        //   error: function (err) {
+        //     console.log('You, sir, have an error.', err);
+        //   }
+        // });  
+
+    });
   });
+  
+    // is URL !archived?
+      // download via ajax
+      // add url to 
+
+
+
 
 };

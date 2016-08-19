@@ -36,8 +36,18 @@ exports.handleRequest = function (req, res) {
   // }
 
 
-  if (endpoint === '/' && req.method === 'GET') {
-    httpHelpers.serveSiteAssets(res, '/index.html');
+  if (endpoint === '/') {
+    if (req.method === 'GET') {
+      httpHelpers.serveSiteAssets(res, '/index.html');
+    } else if (req.method === 'POST') {
+      archive.isUrlInList(endpoint, function (bool) {
+        if (!bool) {
+          archive.addUrlToList(endpoint);
+          res.writeHead(302, headers);
+          res.end();
+        }
+      }); 
+    }
 
   } else if ( endpoint === '/www.google.com') {
     if (req.method === 'GET') {
