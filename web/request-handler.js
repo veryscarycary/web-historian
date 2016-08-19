@@ -31,8 +31,9 @@ exports.handleRequest = function (req, res) {
   // console.log('POSTDATAAA', req._postData);
   // console.log('ENDPOINT', endpoint);
   // if url and GET
-
-  
+  // if (req.method === 'POST') {
+  //   archive.isUrlInList(endpoint);
+  // }
 
 
   if (endpoint === '/' && req.method === 'GET') {
@@ -45,16 +46,14 @@ exports.handleRequest = function (req, res) {
       // fs.readFile() plus new site text
       fs.readFile(archive.paths.list, function(err, data) {
         var stringifiedData = data.toString();
-        var newData = stringifiedData + '8' + endpoint + '8';
+        var newData = stringifiedData + '\n' + endpoint + '\n';
         console.log('NEWDATA', newData);
       //   var newData = sites.Container.push(endpoint.slice(1));
         if (!archive.isUrlInList(stringifiedData, endpoint)) {
-          fs.writeFile(archive.paths.list, newData, function(err) {
-            if (err) { throw err; }
-            console.log('Saved new list!');
-          });
+          archive.addUrlToList(newData);
         }
       });  
+
     }
 
   } else if (endpoint === '/api/sites' && req.method === 'GET') {
