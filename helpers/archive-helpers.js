@@ -29,34 +29,40 @@ exports.initialize = function(pathsObj) {
 
 // worker uses this function
 exports.readListOfUrls = function(cb) {
-  fs.readFile('../web/archives/sites.txt', 'utf8', function(err, data) {
+  fs.readFile(exports.paths.list, 'utf8', function(err, data) {
     console.log('readFile has succeeded with this data: ', data);
-    cb(data);
+
+    var urls = data.split('\n');
+    return cb(urls) || urls;
   });
 };
 
 // webserver uses this function
-exports.isUrlInList = function(data, site) {
-  return _.contains(data, site) ? true : false; // exports.addUrlToList(data, site);
-};
-
-// webserver uses this function
-exports.addUrlToList = function(data, site) {
-  fs.writeFile('../web/archives/sites.txt', data, 'utf8', function(err) {
-    if (err) { throw err; }
-    console.log('writeFile has succeeded, data saved');
+exports.isUrlInList = function(url, cb) {
+  exports.readListOfUrls(function(data) {
+    cb(_.contains(data, url));
   });
 };
 
-exports.isUrlArchived = function(site) {
-  fs.readdir('../web/archives/sites/', function (err, contents) {
-    return _.reduce(contents, function(acc, curr) {
-      if (curr === site) {
+// webserver uses this function
+exports.addUrlToList = function(url, cb) {
+  exports.readListOfUrls(function(contents) {
+    fs.writeFile(exports.paths.list, contents + '\n' + url, function(err) {
+      if (err) { throw err; }
+      cb();
+    });
+  });
+};
+
+exports.isUrlArchived = function(url, cb) {
+  fs.readdir(exports.paths.archivedSites, function (err, contents) {
+    console.log('contents: ', contents);
+    cb(_.reduce(contents, function(acc, curr) {
+      if (curr === url) {
         return true;
       }
-
       return acc;
-    }, false);
+    }, false));
   });
 };
 
